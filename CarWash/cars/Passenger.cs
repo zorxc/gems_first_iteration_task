@@ -9,7 +9,7 @@ namespace CarWash.cars
     /// <summary>
     /// Класс легкового автомобиля.
     /// </summary>
-    class Passenger : ICar
+    public class Passenger : ICar
     {
         public uint WashingTime { get; } = 5;
     }

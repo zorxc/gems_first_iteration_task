@@ -9,7 +9,7 @@ namespace CarWash.cars
     /// <summary>
     /// Класс джипа.
     /// </summary>
-    class Jeep : ICar
+    public class Jeep : ICar
     {
         public uint WashingTime { get; } = 8;
     }

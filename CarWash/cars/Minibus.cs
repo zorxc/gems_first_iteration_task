@@ -9,7 +9,7 @@ namespace CarWash.cars
     /// <summary>
     /// Класс микроавтобуса.
     /// </summary>
-    class Minibus : ICar
+    public class Minibus : ICar
     {
         public uint WashingTime { get; } = 10;
     }

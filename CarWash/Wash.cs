@@ -35,12 +35,20 @@ namespace CarWash
         /// </summary>
         /// <param name="id">Идентификатор поста.</param>
         /// <param name="postFreeHandler">Делегат для обработчика события освобождения поста.</param>
-        /// <param name="carWashingInfoHandler">Делегат для обработчика события начала и окончания мойки.</param>
-        public Post(int id, PostFreeHandler postFreeHandler, CarWashingInfoHandler carWashingInfoHandler)
+        public Post(int id, PostFreeHandler postFreeHandler)
         {
             Status = PostStatus.Free;
             Id = id;
             OnPostFree += postFreeHandler;
+        }
+        /// <summary>
+        /// Конструктор поста.
+        /// </summary>
+        /// <param name="id">Идентификатор поста.</param>
+        /// <param name="postFreeHandler">Делегат для обработчика события освобождения поста.</param>
+        /// <param name="carWashingInfoHandler">Делегат для обработчика события начала и окончания мойки.</param>
+        public Post(int id, PostFreeHandler postFreeHandler, CarWashingInfoHandler carWashingInfoHandler) : this(id, postFreeHandler)
+        {
             OnCarWashingInfo += carWashingInfoHandler;
         }
         /// <summary>
@@ -66,10 +74,11 @@ namespace CarWash
             });
         }
     }
+
     /// <summary>
     /// Класс, выполняющий функцию автомойки.
     /// </summary>
-    internal class Wash
+    public class Wash
     {
         /// <summary>
         /// Максимальное количество постов.
@@ -86,23 +95,37 @@ namespace CarWash
         /// <summary>
         /// Конструктор класса автомойки.
         /// </summary>
+        public Wash()
+        {
+            _queueCars = new Queue<ICar>();
+            _posts = new List<Post>();
+
+            for (int i = 1; i <= _maxPosts; i++) // Заполнение списка постов (всего 6, каждому присваиваем свой идентификатор, от 1 до 6)
+                _posts.Add(new Post(i, PostFree));
+        }
+        /// <summary>
+        /// Конструктор класса автомойки.
+        /// </summary>
         /// <param name="handler">Делегат для обработчика события начала и окончания мойки.</param>
         public Wash(CarWashingInfoHandler handler)
         {
             _queueCars = new Queue<ICar>();
             _posts = new List<Post>();
 
-
             // Типа рекурсивный вызов через обработчик события. Решил сделать так, чтобы класс Post не хранил в себе очередь машин.
-                                                                                // (да и вообще что-то "знал" об этой очереди)
-            void PostFree(Post post)
-            {
-                if (_queueCars.TryDequeue(out ICar? nextCar))
-                    post.StartWashing(nextCar);
-            }
+            // (да и вообще что-то "знал" об этой очереди)
 
-            for (int i = 1; i <= _maxPosts; i++) // Заполнение списка постов (всего 6, каждому присваиваем свой идентификатор, от 1 до 6)
+            for (int i = 1; i <= _maxPosts; i++)
                 _posts.Add(new Post(i, PostFree, handler));
+        }
+        /// <summary>
+        /// Обработчик для события OnPostFree.
+        /// </summary>
+        /// <param name="post"></param>
+        private void PostFree(Post post)
+        {
+            if (_queueCars.TryDequeue(out ICar? nextCar))
+                post.StartWashing(nextCar);
         }
         /// <summary>
         /// Метод, запускающий работу мойки.
