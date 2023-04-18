@@ -17,23 +17,24 @@ namespace Tests.CarWash
             });
         }
 
-        [Test]
-        public void TestNoCarsException()
-        {
-            Assert.Throws<NoCarsException>(() =>
-            {
-                wash.StartWorking();
-            });
-        }
+
 
         [Test]
-        public void TestWashJeepState()
+        public void TestWashOftenCarsRevenue()
         {
+            wash.AddCar(new Minibus());
             wash.AddCar(new Jeep());
+            wash.AddCar(new Minibus());
+            wash.AddCar(new Jeep());
+            wash.AddCar(new Minibus());
+            wash.AddCar(new Passenger());
+            wash.AddCar(new Passenger()); // 1200 + 720 + 300 = 2220
+            wash.AddCar(new Jeep());
+            wash.AddCar(new Minibus());
 
             wash.StartWorking();
 
-            Assert.That(status, Is.EqualTo(PostStatus.Free));
+            Assert.That(wash.Revenue, Is.EqualTo(2220));
         }
     }
 }

@@ -14,7 +14,7 @@ namespace CarWash
             Console.WriteLine($"Post id: {post.Id}.\n" +
                               $"Post status: {post.Status}.\n" +
                               $"Car type: {currentCar.GetType().Name}.\n" +
-                              $"Time: {currentCar.WashingTime}.");
+                              $"Time: {currentCar.WashingTime}.\n");
         }
         /// <summary>
         /// Безопасное чтение количества моделируемых машин.
@@ -54,6 +54,8 @@ namespace CarWash
             }
 
             wash.StartWorking();
+
+            Console.WriteLine($"Total revenue: {wash.Revenue} rub.");
 
             Console.ReadKey();
         }

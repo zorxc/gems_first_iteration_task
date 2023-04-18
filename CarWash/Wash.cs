@@ -1,4 +1,5 @@
 ﻿using CarWash.cars;
+using System.Linq;
 
 namespace CarWash
 {
@@ -55,22 +56,26 @@ namespace CarWash
         /// Метод, имитирующий процесс мойки.
         /// </summary>
         /// <param name="car">Машина, которую нужно помыть.</param>
-        public void StartWashing(ICar car)
+        public async Task<int> StartWashing(ICar car)
         {
-            Task.Factory.StartNew(async () =>                   // "Моем" авто в отдельном потоке.
+            return await Task.Run(() =>
             {
                 Status = PostStatus.Washing;
 
                 OnCarWashingInfo?.Invoke(this, car);            // Вызов обработчика события перед началом мойки.
 
-                await Task.Delay((int)car.WashingTime * 1000);  // Имитация мойки.
+                int revenue = 0;
+
+                for (int i = 1; i <= car.WashingTime; i++)      // Имитация мойки.
+                    revenue += 30;
 
                 Status = PostStatus.Free;
 
                 OnCarWashingInfo?.Invoke(this, car);            // Вызов обработчика после мойки.
 
-                OnPostFree?.Invoke(this);                       // Оповещаем класс Wash о том, что мойка авто закончена.
-                                                                // Приступаем к мойке следующего авто.
+                OnPostFree?.Invoke(this);              // Оповещаем класс Wash о том, что мойка авто закончена.
+                                                       // Приступаем к мойке следующего авто.
+                return revenue;
             });
         }
     }
@@ -80,6 +85,7 @@ namespace CarWash
     /// </summary>
     public class Wash
     {
+        private List<Task<int>> _postsTasks;
         /// <summary>
         /// Максимальное количество постов.
         /// </summary>
@@ -93,10 +99,15 @@ namespace CarWash
         /// </summary>
         private List<Post> _posts;
         /// <summary>
+        /// Выручка.
+        /// </summary>
+        public int Revenue { get; private set; }
+        /// <summary>
         /// Конструктор класса автомойки.
         /// </summary>
         public Wash()
         {
+            _postsTasks = new List<Task<int>>();
             _queueCars = new Queue<ICar>();
             _posts = new List<Post>();
 
@@ -109,6 +120,7 @@ namespace CarWash
         /// <param name="handler">Делегат для обработчика события начала и окончания мойки.</param>
         public Wash(CarWashingInfoHandler handler)
         {
+            _postsTasks = new List<Task<int>>();
             _queueCars = new Queue<ICar>();
             _posts = new List<Post>();
 
@@ -125,18 +137,22 @@ namespace CarWash
         private void PostFree(Post post)
         {
             if (_queueCars.TryDequeue(out ICar? nextCar))
-                post.StartWashing(nextCar);
+                _postsTasks.Add(post.StartWashing(nextCar));
         }
         /// <summary>
         /// Метод, запускающий работу мойки.
         /// </summary>
         /// <exception cref="NoCarsException">Если вдруг автомобилей вообще нет.</exception>
-        public void StartWorking()
+        public async void StartWorking()
         {
             if (_queueCars.Count == 0) throw new NoCarsException();
 
             foreach (Post post in _posts)
-                if (_queueCars.TryDequeue(out ICar? car)) post.StartWashing(car);
+                if (_queueCars.TryDequeue(out ICar? car)) _postsTasks.Add(post.StartWashing(car));
+
+            int[] result = await Task.WhenAll(_postsTasks);
+
+            Revenue = result.Sum();
         }
         /// <summary>
         /// Метод для добавления новых авто в очередь.
