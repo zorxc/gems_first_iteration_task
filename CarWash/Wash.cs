@@ -73,8 +73,8 @@ namespace CarWash
 
                 OnCarWashingInfo?.Invoke(this, car);            // Вызов обработчика после мойки.
 
-                OnPostFree?.Invoke(this);              // Оповещаем класс Wash о том, что мойка авто закончена.
-                                                       // Приступаем к мойке следующего авто.
+                OnPostFree?.Invoke(this);                       // Оповещаем класс Wash о том, что мойка авто закончена.
+                                                                // Приступаем к мойке следующего авто.
                 return revenue;
             });
         }
@@ -133,7 +133,7 @@ namespace CarWash
         /// <summary>
         /// Обработчик для события OnPostFree.
         /// </summary>
-        /// <param name="post"></param>
+        /// <param name="post">Текущий пост.</param>
         private void PostFree(Post post)
         {
             if (_queueCars.TryDequeue(out ICar? nextCar))
@@ -143,16 +143,16 @@ namespace CarWash
         /// Метод, запускающий работу мойки.
         /// </summary>
         /// <exception cref="NoCarsException">Если вдруг автомобилей вообще нет.</exception>
-        public async void StartWorking()
+        public void StartWorking()
         {
             if (_queueCars.Count == 0) throw new NoCarsException();
 
             foreach (Post post in _posts)
                 if (_queueCars.TryDequeue(out ICar? car)) _postsTasks.Add(post.StartWashing(car));
 
-            int[] result = await Task.WhenAll(_postsTasks);
+            Task.WaitAll(_postsTasks.ToArray());
 
-            Revenue = result.Sum();
+            Revenue = _postsTasks.Select(pt => pt.Result).Sum();
         }
         /// <summary>
         /// Метод для добавления новых авто в очередь.

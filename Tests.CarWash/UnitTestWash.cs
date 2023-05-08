@@ -17,8 +17,6 @@ namespace Tests.CarWash
             });
         }
 
-
-
         [Test]
         public void TestWashOftenCarsRevenue()
         {
